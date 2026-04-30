@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IIRAMII SMSF - General Ledger</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --bg: #f4f5f7; --surface: #ffffff; --primary: #1a365d; --border: #e2e8f0; --text: #2d3748; --text-light: #718096; --dr: #2f855a; --cr: #c53030; --hover: #edf2f7; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; font-size: 13px; }
+  
+  /* Sidebar */
+  .sidebar { width: 220px; background: var(--primary); color: white; display: flex; flex-direction: column; flex-shrink: 0; }
+  .brand { padding: 20px; font-weight: 600; font-size: 16px; border-bottom: 1px solid rgba(255,255,255,0.1); letter-spacing: 0.5px; }
+  .nav { flex: 1; overflow-y: auto; padding: 10px 0; }
+  .nav-lbl { padding: 10px 20px 5px; font-size: 10px; text-transform: uppercase; color: rgba(255,255,255,0.4); font-family: 'JetBrains Mono', monospace; }
+  .nav-item { padding: 10px 20px; cursor: pointer; color: rgba(255,255,255,0.7); transition: 0.2s; }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
+  .nav-item.active { border-left: 3px solid #63b3ed; background: rgba(255,255,255,0.1); color: white; font-weight: 500; }
+  
+  /* Main */
+  .main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+  .topbar { background: var(--surface); height: 60px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; flex-shrink: 0; }
+  .topbar h2 { font-size: 18px; font-weight: 500; }
+  .actions { display: flex; gap: 10px; }
+  .content { flex: 1; overflow-y: auto; padding: 24px; }
+  .page { display: none; }
+  .page.active { display: block; }
+  
+  /* Components */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); font-weight: 600; background: #fafbfc; display: flex; justify-content: space-between; align-items: center; }
+  .card-body { padding: 20px; }
+  
+  .btn { padding: 8px 16px; border: none; border-radius: 4px; font-family: inherit; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+  .btn-primary { background: var(--primary); color: white; }
+  .btn-primary:hover { background: #2a4365; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { background: var(--hover); }
+  .btn-danger { background: #fee2e2; color: #991b1b; padding: 4px 8px; font-size: 11px; }
+  
+  /* Forms */
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .fg { display: flex; flex-direction: column; gap: 4px; }
+  .fg label { font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; }
+  .fg input, .fg select { padding: 8px 12px; border: 1px solid var(--border); border-radius: 4px; font-family: inherit; font-size: 13px; outline: none; }
+  .fg input:focus, .fg select:focus { border-color: var(--primary); }
+  
+  /* Tables */
+  table { width: 100%; border-collapse: collapse; text-align: left; }
+  th { padding: 10px 16px; font-size: 11px; font-weight: 600; color: var(--text-light); text-transform: uppercase; border-bottom: 2px solid var(--border); background: #fafbfc; white-space: nowrap; }
+  td { padding: 12px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--hover); }
+  .mono { font-family: 'JetBrains Mono', monospace; font-size: 12px; }
+  .tr { text-align: right; }
+  .tc { text-align: center; }
+  .dr { color: var(--dr); }
+  .cr { color: var(--cr); }
+  
+  /* Ledger Specific */
+  .txn-group { border-bottom: 2px solid var(--border); }
+  .txn-header { background: #f8fafc; font-size: 11px; padding: 6px 16px; color: var(--text-light); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+  
+  .loader { position: fixed; inset: 0; background: rgba(255,255,255,0.8); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 1000; display: none; }
+  .loader.active { display: flex; }
+  .spinner { width: 30px; height: 30px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 10px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div class="loader" id="loader"><div class="spinner"></div><div id="loader-txt">Syncing with Ledger...</div></div>
+
+<div class="sidebar">
+  <div class="brand">PBGCO SMSF Audit</div>
+  <div class="nav">
+    <div class="nav-lbl">Accounting</div>
+    <div class="nav-item active" onclick="nav('journal')">Master Journal</div>
+    <div class="nav-item" onclick="nav('ledger')">Ledger Viewer</div>
+    <div class="nav-item" onclick="nav('coa')">Chart of Accounts</div>
+    <div class="nav-lbl">Data Entry</div>
+    <div class="nav-item" onclick="nav('form-trade')">Buy / Sell Stocks</div>
+    <div class="nav-item" onclick="nav('form-exp')">Bank / Expenses</div>
+    <div class="nav-lbl">Financials</div>
+    <div class="nav-item" onclick="nav('bs')">Balance Sheet</div>
+    <div class="nav-item" onclick="nav('pl')">Profit & Loss</div>
+    <div class="nav-item" onclick="nav('holdings')">Portfolio (At Cost)</div>
+  </div>
+</div>
+
+<div class="main">
+  <div class="topbar">
+    <h2 id="page-title">Master Journal</h2>
+    <div class="actions">
+      <select id="global-mem" class="btn btn-outline" onchange="refreshCurrentView()">
+        <option value="ALL">All Members</option>
+        <option value="KS">KS</option>
+        <option value="LP">LP</option>
+      </select>
+      <button class="btn btn-primary" onclick="loadData()">⟳ Refresh Data</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- MASTER JOURNAL -->
+    <div id="p-journal" class="page active">
+      <div class="card">
+        <div class="card-header">Double-Entry Ledger History</div>
+        <div id="journal-container"></div>
+      </div>
+    </div>
+
+    <!-- LEDGER VIEWER -->
+    <div id="p-ledger" class="page">
+      <div class="card">
+        <div class="card-header">
+          <span>Account Ledger</span>
+          <select id="ledger-acc" class="btn btn-outline" onchange="renderLedger()"></select>
+        </div>
+        <table>
+          <thead><tr><th>Date</th><th>Txn ID</th><th>Narration</th><th>Opposite Account</th><th class="tr">Debit</th><th class="tr">Credit</th><th class="tr">Running Bal</th></tr></thead>
+          <tbody id="ledger-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- CHART OF ACCOUNTS -->
+    <div id="p-coa" class="page">
+      <div class="card">
+        <div class="card-header">Chart of Accounts & Opening Balances</div>
+        <table>
+          <thead><tr><th>Code</th><th>Account Name</th><th>Type</th><th>Normal Bal</th><th class="tr">Opening KS</th><th class="tr">Opening LP</th></tr></thead>
+          <tbody id="coa-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- FORM: TRADE -->
+    <div id="p-form-trade" class="page">
+      <div class="card">
+        <div class="card-header">Record Stock Trade</div>
+        <div class="card-body">
+          <div class="grid-3">
+            <div class="fg"><label>Trade Type</label><select id="t-type"><option value="BUY">Buy</option><option value="SELL">Sell</option></select></div>
+            <div class="fg"><label>Date</label><input type="date" id="t-date"></div>
+            <div class="fg"><label>Member</label><select id="t-mem"><option value="KS">KS</option><option value="LP">LP</option></select></div>
+            <div class="fg"><label>ASX Code</label><input type="text" id="t-asx" style="text-transform:uppercase"></div>
+            <div class="fg"><label>Quantity</label><input type="number" id="t-qty" oninput="calcTrade()"></div>
+            <div class="fg"><label>Price per Share</label><input type="number" step="0.0001" id="t-price" oninput="calcTrade()"></div>
+            <div class="fg"><label>Brokerage</label><input type="number" id="t-brok" value="19.95" oninput="calcTrade()"></div>
+            <div class="fg"><label>Total Value</label><input type="text" id="t-total" readonly style="background:#edf2f7;font-weight:bold"></div>
+            <div class="fg"><label>Paid From / To</label><select id="t-acc"><option value="1002">1002 - Broker Account</option><option value="1001">1001 - Bank Account</option></select></div>
+          </div>
+          <div style="margin-top:20px"><button class="btn btn-primary" onclick="submitTrade()">Submit Trade to Ledger</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- FORM: EXPENSE/BANK -->
+    <div id="p-form-exp" class="page">
+      <div class="card">
+        <div class="card-header">Record Bank Transaction (Double Entry)</div>
+        <div class="card-body">
+          <div class="grid-3">
+            <div class="fg"><label>Date</label><input type="date" id="e-date"></div>
+            <div class="fg"><label>Total Amount</label><input type="number" id="e-amt" oninput="calcSplit()"></div>
+            <div class="fg"><label>Type</label><select id="e-type"><option value="PAYMENT">Payment (Cr Bank)</option><option value="RECEIPT">Receipt (Dr Bank)</option></select></div>
+            <div class="fg"><label>Target Account (The Expense/Income)</label><select id="e-acc"></select></div>
+            <div class="fg"><label>Narration</label><input type="text" id="e-desc"></div>
+          </div>
+          <div class="grid-2" style="margin-top:20px; padding:15px; background:#f8fafc; border-radius:4px; border:1px solid var(--border)">
+            <div class="fg"><label>KS Allocation ($)</label><input type="number" id="e-ks" value="0"></div>
+            <div class="fg"><label>LP Allocation ($)</label><input type="number" id="e-lp" value="0"></div>
+          </div>
+          <div style="margin-top:20px"><button class="btn btn-primary" onclick="submitExpense()">Post to Ledger</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BALANCE SHEET -->
+    <div id="p-bs" class="page"><div class="card"><div class="card-header">Balance Sheet (Historical Cost)</div><div class="card-body" id="bs-body"></div></div></div>
+    
+    <!-- P&L -->
+    <div id="p-pl" class="page"><div class="card"><div class="card-header">Profit & Loss</div><div class="card-body" id="pl-body"></div></div></div>
+
+    <!-- HOLDINGS -->
+    <div id="p-holdings" class="page"><div class="card"><div class="card-header">Portfolio Inventory (At Cost)</div>
+        <table><thead><tr><th>ASX</th><th>Member</th><th class="tr">Qty</th><th class="tr">Avg Cost</th><th class="tr">Total Cost Base</th></tr></thead><tbody id="holdings-tbody"></tbody></table>
+    </div></div>
+
+  </div>
+</div>
+
+<script>
+// ==========================================
+// 1. CONFIGURATION
+// ==========================================
+const API_URL = 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE'; 
+let DB = { coa: [], journal: [] };
+
+// ==========================================
+// 2. UTILITY FUNCTIONS
+// ==========================================
+const $ = id => document.getElementById(id);
+const show = id => { document.querySelectorAll('.page').forEach(p => p.classList.remove('active')); $(id).classList.add('active'); };
+const fmt = num => new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD' }).format(num || 0);
+const loadOn = (txt) => { $('loader-txt').innerText = txt; $('loader').classList.add('active'); };
+const loadOff = () => $('loader').classList.remove('active');
+
+function nav(pageId) {
+  document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+  event.target.classList.add('active');
+  $('page-title').innerText = event.target.innerText;
+  show('p-' + pageId);
+  refreshCurrentView();
+}
+
+async function apiCall(action, payload = null) {
+  const url = API_URL + '?action=' + action;
+  const options = payload ? { method: 'POST', body: JSON.stringify(payload) } : { method: 'GET' };
+  try {
+    const res = await fetch(url, options);
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+    return data;
+  } catch(e) {
+    alert("API Error: " + e.message);
+    return null;
+  }
+}
+
+// ==========================================
+// 3. CORE DATA LOADING
+// ==========================================
+async function loadData() {
+  if (API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_WEB_APP_URL_HERE') {
+      alert("Please update API_URL in the HTML file with your deployed Apps Script URL.");
+      return;
+  }
+  loadOn('Fetching complete ledger...');
+  const data = await apiCall('getLedger');
+  if (data) {
+    DB.coa = data.coa;
+    DB.journal = data.journal;
+    populateDropdowns();
+    refreshCurrentView();
+  }
+  loadOff();
+}
+
+function refreshCurrentView() {
+  const activePage = document.querySelector('.page.active').id;
+  if(activePage === 'p-journal') renderJournal();
+  if(activePage === 'p-coa') renderCOA();
+  if(activePage === 'p-ledger') renderLedger();
+  if(activePage === 'p-bs' || activePage === 'p-pl') renderFinancials();
+  if(activePage === 'p-holdings') renderHoldings();
+}
+
+function populateDropdowns() {
+  const accSelects = ['e-acc', 'ledger-acc'];
+  const opts = DB.coa.map(a => `<option value="${a.code}">${a.code} - ${a.name}</option>`).join('');
+  accSelects.forEach(id => { if($(id)) $(id).innerHTML = opts; });
+}
+
+// ==========================================
+// 4. RENDERING VIEWS
+// ==========================================
+function renderCOA() {
+  $('coa-tbody').innerHTML = DB.coa.map(a => `
+    <tr><td class="mono">${a.code}</td><td>${a.name}</td><td>${a.type}</td><td>${a.norm}</td>
+    <td class="tr mono">${fmt(a.opKS)}</td><td class="tr mono">${fmt(a.opLP)}</td></tr>
+  `).join('');
+}
+
+function renderJournal() {
+  const mem = $('global-mem').value;
+  // Group journal by TxnID
+  const grouped = {};
+  DB.journal.forEach(r => {
+    if (mem !== 'ALL' && r.member !== mem) return;
+    if(!grouped[r.txnId]) grouped[r.txnId] = { date: r.date, lines: [] };
+    grouped[r.txnId].lines.push(r);
+  });
+
+  let html = '';
+  Object.keys(grouped).sort((a,b) => new Date(grouped[b].date) - new Date(grouped[a].date)).forEach(txid => {
+    const g = grouped[txid];
+    html += `<div class="txn-group">
+      <div class="txn-header">
+        <span><strong>${new Date(g.date).toLocaleDateString()}</strong> | Ref: ${txid}</span>
+        <button class="btn btn-danger" onclick="deleteTxn('${txid}')">🗑️ Delete</button>
+      </div>
+      <table><tbody>`;
+    g.lines.forEach(l => {
+      html += `<tr>
+        <td width="40%" class="mono">${l.code} - ${l.name}</td>
+        <td width="30%">${l.desc} <span class="mono" style="color:var(--text-light); float:right">${l.member}</span></td>
+        <td width="15%" class="tr mono dr">${l.dr ? fmt(l.dr) : ''}</td>
+        <td width="15%" class="tr mono cr">${l.cr ? fmt(l.cr) : ''}</td>
+      </tr>`;
+    });
+    html += `</tbody></table></div>`;
+  });
+  $('journal-container').innerHTML = html;
+}
+
+function renderLedger() {
+  const code = $('ledger-acc').value;
+  const mem = $('global-mem').value;
+  if(!code) return;
+
+  const accDef = DB.coa.find(a => a.code == code);
+  let runBal = 0;
+  if(mem === 'ALL') runBal = accDef.opKS + accDef.opLP;
+  else if(mem === 'KS') runBal = accDef.opKS;
+  else if(mem === 'LP') runBal = accDef.opLP;
+
+  const lines = DB.journal.filter(r => r.code == code && (mem === 'ALL' || r.member === mem)).sort((a,b) => new Date(a.date) - new Date(b.date));
+
+  let html = `<tr><td colspan="6"><strong>Opening Balance</strong></td><td class="tr mono"><strong>${fmt(runBal)}</strong></td></tr>`;
+  
+  lines.forEach(l => {
+    if(accDef.norm === 'Dr') runBal += (l.dr - l.cr);
+    else runBal += (l.cr - l.dr);
+    html += `<tr>
+      <td class="mono">${new Date(l.date).toLocaleDateString()}</td><td class="mono">${l.txnId}</td>
+      <td>${l.desc} <span style="font-size:10px; color:var(--text-light)">(${l.member})</span></td>
+      <td>-</td><td class="tr mono dr">${l.dr ? fmt(l.dr) : ''}</td><td class="tr mono cr">${l.cr ? fmt(l.cr) : ''}</td>
+      <td class="tr mono"><strong>${fmt(runBal)}</strong></td>
+    </tr>`;
+  });
+  $('ledger-tbody').innerHTML = html;
+}
+
+function renderFinancials() {
+  // Generate Trial Balance dynamically
+  const mem = $('global-mem').value;
+  const tb = {};
+  DB.coa.forEach(a => {
+    let bal = (mem === 'ALL') ? a.opKS + a.opLP : (mem === 'KS' ? a.opKS : a.opLP);
+    const lines = DB.journal.filter(r => r.code == a.code && (mem === 'ALL' || r.member === mem));
+    lines.forEach(l => { bal += (a.norm === 'Dr') ? (l.dr - l.cr) : (l.cr - l.dr); });
+    tb[a.code] = { name: a.name, type: a.type, bal: bal };
+  });
+
+  // Balance Sheet Render
+  let bsHtml = '<table class="mono"><tbody>';
+  let tAsset=0, tLiab=0, tEq=0;
+  bsHtml += '<tr><td colspan="2" style="background:#edf2f7; font-weight:bold; font-family:DM Sans">ASSETS</td></tr>';
+  Object.keys(tb).forEach(k => { if(tb[k].type==='Asset') { bsHtml += `<tr><td>${k} - ${tb[k].name}</td><td class="tr">${fmt(tb[k].bal)}</td></tr>`; tAsset+=tb[k].bal; } });
+  bsHtml += `<tr><td><strong>TOTAL ASSETS</strong></td><td class="tr"><strong>${fmt(tAsset)}</strong></td></tr>`;
+  
+  bsHtml += '<tr><td colspan="2" style="background:#edf2f7; font-weight:bold; font-family:DM Sans">LIABILITIES</td></tr>';
+  Object.keys(tb).forEach(k => { if(tb[k].type==='Liability') { bsHtml += `<tr><td>${k} - ${tb[k].name}</td><td class="tr">${fmt(tb[k].bal)}</td></tr>`; tLiab+=tb[k].bal; } });
+  bsHtml += `<tr><td><strong>TOTAL LIABILITIES</strong></td><td class="tr"><strong>${fmt(tLiab)}</strong></td></tr>`;
+  
+  bsHtml += `<tr><td><strong>NET ASSETS</strong></td><td class="tr"><strong>${fmt(tAsset - tLiab)}</strong></td></tr>`;
+  bsHtml += '</tbody></table>';
+  $('bs-body').innerHTML = bsHtml;
+
+  // P&L Render
+  let plHtml = '<table class="mono"><tbody>';
+  let tInc=0, tExp=0;
+  plHtml += '<tr><td colspan="2" style="background:#edf2f7; font-weight:bold; font-family:DM Sans">INCOME</td></tr>';
+  Object.keys(tb).forEach(k => { if(tb[k].type==='Revenue') { plHtml += `<tr><td>${k} - ${tb[k].name}</td><td class="tr">${fmt(tb[k].bal)}</td></tr>`; tInc+=tb[k].bal; } });
+  plHtml += `<tr><td><strong>TOTAL INCOME</strong></td><td class="tr"><strong>${fmt(tInc)}</strong></td></tr>`;
+  
+  plHtml += '<tr><td colspan="2" style="background:#edf2f7; font-weight:bold; font-family:DM Sans">EXPENSES</td></tr>';
+  Object.keys(tb).forEach(k => { if(tb[k].type==='Expense') { plHtml += `<tr><td>${k} - ${tb[k].name}</td><td class="tr">${fmt(tb[k].bal)}</td></tr>`; tExp+=tb[k].bal; } });
+  plHtml += `<tr><td><strong>TOTAL EXPENSES</strong></td><td class="tr"><strong>${fmt(tExp)}</strong></td></tr>`;
+  
+  plHtml += `<tr><td><strong>NET PROFIT</strong></td><td class="tr"><strong>${fmt(tInc - tExp)}</strong></td></tr>`;
+  plHtml += '</tbody></table>';
+  $('pl-body').innerHTML = plHtml;
+}
+
+function renderHoldings() {
+  const mem = $('global-mem').value;
+  const holdings = {};
+  
+  // Calculate running inventory from Journal (Code 1100)
+  DB.journal.forEach(r => {
+    if(r.code != '1100') return;
+    if(mem !== 'ALL' && r.member !== mem) return;
+    const asx = r.desc.split(' ')[0]; // Assuming desc starts with ASX code like "BHP Buy..."
+    if(!holdings[asx]) holdings[asx] = { qty: 0, cost: 0 };
+    
+    // Simplistic qty extraction for demo (In real app, store Qty in a dedicated DB column)
+    // Here we just show financial cost base
+    if(r.dr > 0) holdings[asx].cost += r.dr;
+    if(r.cr > 0) holdings[asx].cost -= r.cr;
+  });
+
+  let html = '';
+  Object.keys(holdings).forEach(k => {
+    if(holdings[k].cost > 0.01) {
+      html += `<tr><td><strong>${k}</strong></td><td>${mem}</td><td class="tr mono">-</td><td class="tr mono">-</td><td class="tr mono"><strong>${fmt(holdings[k].cost)}</strong></td></tr>`;
+    }
+  });
+  $('holdings-tbody').innerHTML = html || '<tr><td colspan="5">No holdings.</td></tr>';
+}
+
+// ==========================================
+// 5. DATA ENTRY & ACTIONS
+// ==========================================
+function calcTrade() {
+  const q = +$('t-qty').value || 0, p = +$('t-price').value || 0, b = +$('t-brok').value || 0;
+  $('t-total').value = ($('t-type').value === 'BUY') ? (q*p+b).toFixed(2) : (q*p-b).toFixed(2);
+}
+
+function calcSplit() {
+  const amt = +$('e-amt').value || 0;
+  $('e-ks').value = (amt * 0.70).toFixed(2);
+  $('e-lp').value = (amt * 0.30).toFixed(2);
+}
+
+async function submitTrade() {
+  const payload = {
+    type: $('t-type').value, date: $('t-date').value, mem: $('t-mem').value, asx: $('t-asx').value.toUpperCase(),
+    total: +$('t-total').value, acc: $('t-acc').value,
+    desc: `${$('t-asx').value.toUpperCase()} ${$('t-type').value} ${$('t-qty').value} units`
+  };
+  if(!payload.date || !payload.asx || payload.total <= 0) return alert("Fill required fields.");
+  
+  loadOn('Posting trade to ledger...');
+  const res = await apiCall('postTrade', payload);
+  if(res) { alert("Trade Posted!"); loadData(); $('t-qty').value=''; $('t-price').value=''; }
+  loadOff();
+}
+
+async function submitExpense() {
+  const ks = +$('e-ks').value || 0, lp = +$('e-lp').value || 0, tot = +$('e-amt').value || 0;
+  if(Math.abs((ks+lp) - tot) > 0.01) return alert("Allocation must exactly equal Total Amount.");
+  
+  const payload = {
+    date: $('e-date').value, type: $('e-type').value, acc: $('e-acc').value, desc: $('e-desc').value, ks: ks, lp: lp
+  };
+  if(!payload.date || !payload.desc || tot <= 0) return alert("Fill required fields.");
+
+  loadOn('Posting transaction...');
+  const res = await apiCall('postExpense', payload);
+  if(res) { alert("Transaction Posted!"); loadData(); $('e-amt').value=''; $('e-desc').value=''; }
+  loadOff();
+}
+
+async function deleteTxn(txid) {
+  if(!confirm(`Delete Transaction ${txid} and all its ledger entries? This cannot be undone.`)) return;
+  loadOn('Deleting transaction...');
+  const res = await apiCall('deleteTxn', { txnId: txid });
+  if(res) { alert("Deleted."); loadData(); }
+  loadOff();
+}
+
+window.onload = () => {
+  $('t-date').valueAsDate = new Date();
+  $('e-date').valueAsDate = new Date();
+};
+</script>
+</body>
+</html>
