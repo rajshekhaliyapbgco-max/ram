@@ -1,827 +1,280 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>IIRAMII Super Fund — Accounting System</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-:root {
-  --navy:#0d1f35;--navy-mid:#1a3352;--navy-light:#254a73;
-  --gold:#c9a84c;--gold-light:#e8c97a;--gold-pale:#fdf6e3;
-  --cream:#f8f4ed;--white:#ffffff;--slate:#4a5568;--slate-light:#718096;
-  --green:#276749;--green-light:#38a169;--green-pale:#f0fff4;
-  --red:#9b2335;--red-light:#e53e3e;--red-pale:#fff5f5;
-  --border:#e2ddd4;--shadow:0 4px 24px rgba(13,31,53,.10);
-}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--navy);min-height:100vh;font-size:14px}
+/**
+ * ============================================================
+ * IIRAMII SUPER FUND - FULL MASTER ENGINE & API
+ * ============================================================
+ */
 
-/* SIDEBAR */
-.sidebar{position:fixed;top:0;left:0;width:230px;height:100vh;background:var(--navy);display:flex;flex-direction:column;z-index:100;box-shadow:4px 0 24px rgba(13,31,53,.3)}
-.sb-brand{padding:24px 20px 18px;border-bottom:1px solid rgba(201,168,76,.2)}
-.sb-brand .fn{font-family:'DM Serif Display',serif;font-size:16px;color:var(--gold);line-height:1.3}
-.sb-brand .fs{font-size:10px;color:rgba(255,255,255,.35);margin-top:3px;font-family:'DM Mono',monospace;letter-spacing:.08em;text-transform:uppercase}
-.sb-nav{flex:1;padding:12px 0;overflow-y:auto}
-.nav-lbl{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.22);padding:12px 20px 5px;font-family:'DM Mono',monospace}
-.nav-item{display:flex;align-items:center;gap:9px;padding:9px 20px;cursor:pointer;color:rgba(255,255,255,.5);font-size:13px;transition:all .15s;border-left:3px solid transparent;user-select:none}
-.nav-item:hover{background:rgba(201,168,76,.08);color:rgba(255,255,255,.85)}
-.nav-item.active{background:rgba(201,168,76,.12);color:var(--gold-light);border-left-color:var(--gold);font-weight:500}
-.nav-item .ic{font-size:14px;width:18px;text-align:center}
-.sb-foot{padding:14px 20px;border-top:1px solid rgba(255,255,255,.07);font-size:10px;color:rgba(255,255,255,.22);font-family:'DM Mono',monospace}
+const SS_ID = '1lrvAeeuZR2VBzaf8wh94TOrLsyBmECbIB9_LWaVC7cw';
 
-/* MAIN */
-.main{margin-left:230px;min-height:100vh;display:flex;flex-direction:column}
-.topbar{background:var(--white);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
-.topbar-title{font-family:'DM Serif Display',serif;font-size:20px;color:var(--navy)}
-.topbar-actions{display:flex;gap:8px;align-items:center}
-.content{padding:24px 28px;flex:1}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:none;font-family:'DM Sans',sans-serif;transition:all .15s}
-.btn-primary{background:var(--navy);color:white}.btn-primary:hover{background:var(--navy-mid)}
-.btn-gold{background:var(--gold);color:var(--navy)}.btn-gold:hover{background:var(--gold-light)}
-.btn-outline{background:transparent;border:1.5px solid var(--border);color:var(--slate)}.btn-outline:hover{border-color:var(--navy);color:var(--navy)}
-.btn-green{background:var(--green);color:white}.btn-green:hover{background:var(--green-light)}
-.btn-red{background:var(--red);color:white}
-
-/* CARDS */
-.card{background:var(--white);border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);margin-bottom:18px}
-.card-header{padding:16px 22px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.card-title{font-family:'DM Serif Display',serif;font-size:15px;color:var(--navy)}
-.card-body{padding:18px 22px}
-
-/* KPI */
-.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
-.kpi-card{background:var(--white);border-radius:10px;border:1px solid var(--border);padding:18px 20px;box-shadow:var(--shadow);position:relative;overflow:hidden}
-.kpi-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:3px}
-.kpi-card.gold::before{background:var(--gold)}.kpi-card.green::before{background:var(--green-light)}
-.kpi-card.red::before{background:var(--red-light)}.kpi-card.blue::before{background:var(--navy-light)}
-.kpi-lbl{font-size:10px;color:var(--slate-light);text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace}
-.kpi-val{font-size:24px;font-weight:600;color:var(--navy);margin:5px 0 2px;font-family:'DM Serif Display',serif}
-.kpi-sub{font-size:11px;color:var(--slate-light)}
-.kpi-mem{display:flex;gap:12px;margin-top:9px;padding-top:9px;border-top:1px solid var(--border)}
-.kpi-mem-item{flex:1}
-.kpi-mem-lbl{font-size:9px;color:var(--slate-light);font-family:'DM Mono',monospace;text-transform:uppercase}
-.kpi-mem-val{font-size:13px;font-weight:600;color:var(--navy);margin-top:2px}
-
-/* MEMBER TOGGLE */
-.mem-toggle{display:flex;background:var(--cream);border-radius:7px;padding:3px;gap:2px;border:1px solid var(--border)}
-.mem-toggle button{padding:5px 14px;border-radius:5px;border:none;cursor:pointer;font-size:12px;font-weight:500;font-family:'DM Sans',sans-serif;color:var(--slate);background:transparent;transition:all .15s}
-.mem-toggle button.active{background:var(--navy);color:white}
-
-/* TABLES */
-.tbl-wrap{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-thead th{padding:9px 12px;text-align:left;background:#f7f5f0;color:var(--slate);font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;font-family:'DM Mono',monospace;border-bottom:2px solid var(--border);white-space:nowrap}
-tbody td{padding:10px 12px;border-bottom:1px solid #f0ece4;color:var(--navy);vertical-align:middle}
-tbody tr:hover{background:#faf8f4}
-tbody tr:last-child td{border-bottom:none}
-.tr{text-align:right}.tc{text-align:center}
-.mono{font-family:'DM Mono',monospace;font-size:12px}
-.gain{color:var(--green);font-weight:500}.loss{color:var(--red-light);font-weight:500}
-.badge{display:inline-flex;align-items:center;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:500;font-family:'DM Mono',monospace}
-.bg{background:var(--green-pale);color:var(--green)}
-.br{background:var(--red-pale);color:var(--red-light)}
-.bo{background:#fffaf0;color:#c05621}.bgy{background:#f0f0f0;color:var(--slate)}
-.bgold{background:#fef9e7;color:#8a6a00}
-
-/* FORMS */
-.fg{display:flex;flex-direction:column;gap:4px}
-.fl{font-size:11px;font-weight:500;color:var(--slate);text-transform:uppercase;letter-spacing:.05em;font-family:'DM Mono',monospace}
-.fc{padding:8px 11px;border-radius:6px;border:1.5px solid var(--border);font-size:13px;font-family:'DM Sans',sans-serif;color:var(--navy);background:white;outline:none;transition:border-color .15s;width:100%}
-.fc:focus{border-color:var(--navy-light)}.fc[readonly]{background:var(--cream);color:var(--slate)}
-.fgrid{display:grid;gap:14px}.fg2{grid-template-columns:1fr 1fr}.fg3{grid-template-columns:1fr 1fr 1fr}
-
-/* ALERT */
-.alert{padding:11px 14px;border-radius:7px;font-size:12px;margin-bottom:14px;display:flex;align-items:flex-start;gap:8px}
-.alert-info{background:#ebf8ff;color:#2b6cb0;border:1px solid #bee3f8}
-.alert-success{background:var(--green-pale);color:var(--green);border:1px solid #c6f6d5}
-.alert-error{background:var(--red-pale);color:var(--red-light);border:1px solid #fed7d7}
-.alert-warn{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
-
-/* LOADING */
-.loading-ov{position:fixed;inset:0;background:rgba(13,31,53,.6);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
-.loading-ov.on{opacity:1;pointer-events:all}
-.loading-box{background:white;border-radius:12px;padding:28px 36px;text-align:center}
-.spinner{width:36px;height:36px;border:3px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 12px}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-/* TABS */
-.tabs{display:flex;gap:2px;border-bottom:2px solid var(--border);margin-bottom:18px}
-.tab{padding:9px 18px;cursor:pointer;font-size:13px;font-weight:500;color:var(--slate-light);border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s}
-.tab:hover{color:var(--navy)}.tab.active{color:var(--navy);border-bottom-color:var(--gold);font-weight:600}
-
-/* FIFO PREVIEW */
-.fifo-prev{background:var(--cream);border-radius:7px;border:1px solid var(--border);padding:14px;margin-top:14px}
-.fifo-prev h4{font-size:11px;font-weight:600;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;font-family:'DM Mono',monospace}
-.fifo-row{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12px}
-.fifo-row:last-child{border-bottom:none}
-.fifo-row .fl2{flex:1;color:var(--slate)}.fifo-row .fv{font-weight:500;font-family:'DM Mono',monospace}
-
-/* SPLIT */
-.split-row{display:flex;gap:10px;margin-top:6px}
-.split-box{flex:1;padding:9px 12px;border-radius:6px;background:var(--cream);border:1px solid var(--border);font-size:13px;font-weight:500;text-align:center}
-.split-box small{display:block;font-size:10px;color:var(--slate-light);font-weight:400;margin-bottom:2px}
-
-/* REPORT */
-.rpt{width:100%;border-collapse:collapse}
-.rpt td{padding:8px 14px;font-size:13px;border-bottom:1px solid #f5f2ec}
-.rpt .rsect td{background:#f7f5f0;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--slate);border-bottom:none;padding-top:13px}
-.rpt .rtotal td{font-weight:700;background:#e8f4e8;border-top:2px solid var(--navy)}
-.rpt .rsub td{font-weight:600;border-top:1px solid var(--border);background:#faf8f4}
-
-/* PAGES */
-.page{display:none}.page.active{display:block}
-.empty{text-align:center;padding:40px 20px;color:var(--slate-light)}
-hr{border:none;border-top:1px solid var(--border);margin:18px 0}
-</style>
-</head>
-<body>
-
-<div class="loading-ov" id="lov">
-  <div class="loading-box">
-    <div class="spinner"></div>
-    <div style="font-size:13px;color:var(--slate)" id="ltxt">Loading data...</div>
-  </div>
-</div>
-
-<nav class="sidebar">
-  <div class="sb-brand">
-    <div class="fn">IIRAMII<br>Super Fund</div>
-    <div class="fs">KS &amp; LP · FY 2023–24</div>
-  </div>
-  <div class="sb-nav">
-    <div class="nav-lbl">Overview</div>
-    <div class="nav-item active" onclick="nav('dashboard')"><span class="ic">◈</span>Dashboard</div>
-    <div class="nav-item" onclick="nav('holdings')"><span class="ic">◉</span>Holdings &amp; Lots</div>
-    <div class="nav-lbl">Transactions</div>
-    <div class="nav-item" onclick="nav('buysell')"><span class="ic">⇄</span>Buy / Sell</div>
-    <div class="nav-item" onclick="nav('dividends')"><span class="ic">◎</span>Dividends</div>
-    <div class="nav-item" onclick="nav('expenses')"><span class="ic">◇</span>Expenses</div>
-    <div class="nav-lbl">Accounting</div>
-    <div class="nav-item" onclick="nav('journal')"><span class="ic">≡</span>Journal</div>
-    <div class="nav-lbl">Reports</div>
-    <div class="nav-item" onclick="nav('bs')"><span class="ic">▣</span>Balance Sheet</div>
-    <div class="nav-item" onclick="nav('pl')"><span class="ic">▤</span>P &amp; L</div>
-    <div class="nav-item" onclick="nav('cgt')"><span class="ic">▦</span>CGT Schedule</div>
-  </div>
-  <div class="sb-foot">v3.0 · Accumulation Phase</div>
-</nav>
-
-<div class="main">
-  <div class="topbar">
-    <div class="topbar-title" id="ptitle">Dashboard</div>
-    <div class="topbar-actions">
-      <div class="mem-toggle">
-        <button class="active" onclick="setMem('ALL',this)">All</button>
-        <button onclick="setMem('KS',this)">KS</button>
-        <button onclick="setMem('LP',this)">LP</button>
-      </div>
-      <button class="btn btn-outline" onclick="loadAll()">⟳ Refresh</button>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <!-- DASHBOARD -->
-    <div class="page active" id="p-dashboard">
-      <div class="kpi-grid">
-        <div class="kpi-card gold">
-          <div class="kpi-lbl">Portfolio at Cost</div>
-          <div class="kpi-val" id="kn">—</div>
-          <div class="kpi-sub">Total cost base</div>
-          <div class="kpi-mem">
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">KS</div><div class="kpi-mem-val" id="kn-ks">—</div></div>
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">LP</div><div class="kpi-mem-val" id="kn-lp">—</div></div>
-          </div>
-        </div>
-        <div class="kpi-card green">
-          <div class="kpi-lbl">Market Value</div>
-          <div class="kpi-val" id="kmv">—</div>
-          <div class="kpi-sub">At 30 Jun 2024 prices</div>
-          <div class="kpi-mem">
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">KS</div><div class="kpi-mem-val" id="kmv-ks">—</div></div>
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">LP</div><div class="kpi-mem-val" id="kmv-lp">—</div></div>
-          </div>
-        </div>
-        <div class="kpi-card blue">
-          <div class="kpi-lbl">Unrealized Gain/Loss</div>
-          <div class="kpi-val" id="kur">—</div>
-          <div class="kpi-sub">Market vs cost</div>
-          <div class="kpi-mem">
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">KS</div><div class="kpi-mem-val" id="kur-ks">—</div></div>
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">LP</div><div class="kpi-mem-val" id="kur-lp">—</div></div>
-          </div>
-        </div>
-        <div class="kpi-card red">
-          <div class="kpi-lbl">Realized Gain FY24</div>
-          <div class="kpi-val" id="krg">—</div>
-          <div class="kpi-sub">From sales this FY</div>
-          <div class="kpi-mem">
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">KS</div><div class="kpi-mem-val" id="krg-ks">—</div></div>
-            <div class="kpi-mem-item"><div class="kpi-mem-lbl">LP</div><div class="kpi-mem-val" id="krg-lp">—</div></div>
-          </div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Portfolio Summary by ASX Code</span>
-          <button class="btn btn-outline" onclick="nav('holdings')">Full Detail →</button>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>ASX</th><th>Status</th><th class="tr">KS Qty</th><th class="tr">LP Qty</th>
-              <th class="tr">Total Cost</th><th class="tr">Mkt Value</th><th class="tr">Gain/Loss</th><th class="tc">CGT</th>
-            </tr></thead>
-            <tbody id="dash-tbody"><tr><td colspan="8"><div class="empty">Loading...</div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- HOLDINGS -->
-    <div class="page" id="p-holdings">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">FIFO Lot Detail — Per Member Per Purchase</span>
-          <span style="font-size:11px;color:var(--slate-light)">CGT eligibility as at 30 Jun 2024</span>
-        </div>
-        <div class="tbl-wrap">
-          <table>
-            <thead><tr>
-              <th>ASX</th><th>Member</th><th>Purchase Date</th>
-              <th class="tr">Original Qty</th><th class="tr">Remaining Qty</th>
-              <th class="tr">Cost/Share</th><th class="tr">Remaining Cost</th>
-              <th class="tr">Mkt Value</th><th class="tr">Unrealized</th>
-              <th class="tc">Days</th><th class="tc">CGT Disc.</th><th>Status</th>
-            </tr></thead>
-            <tbody id="h-tbody"><tr><td colspan="12"><div class="empty">Loading...</div></td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- BUY / SELL -->
-    <div class="page" id="p-buysell">
-      <div class="tabs">
-        <div class="tab active" onclick="stab('buy','bs-tabs',this)">Record Buy</div>
-        <div class="tab" onclick="stab('sell','bs-tabs',this)">Record Sell</div>
-      </div>
-      <div id="bs-tabs">
-        <div id="tab-buy">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Record Purchase</span></div>
-            <div class="card-body">
-              <div class="fgrid fg3">
-                <div class="fg"><label class="fl">Transaction ID</label><input class="fc" id="b-id" placeholder="T007"></div>
-                <div class="fg"><label class="fl">Date</label><input class="fc" type="date" id="b-date"></div>
-                <div class="fg"><label class="fl">Member</label><select class="fc" id="b-mem"><option value="KS">KS — Kailash Sahetya</option><option value="LP">LP — Lata Pahuja</option></select></div>
-                <div class="fg"><label class="fl">ASX Code</label><input class="fc" id="b-asx" placeholder="e.g. BHP" style="text-transform:uppercase"></div>
-                <div class="fg"><label class="fl">Quantity</label><input class="fc" type="number" id="b-qty" placeholder="0" oninput="cBuy()"></div>
-                <div class="fg"><label class="fl">Price/Share ($)</label><input class="fc" type="number" step="0.0001" id="b-price" placeholder="0.0000" oninput="cBuy()"></div>
-                <div class="fg"><label class="fl">Brokerage ($)</label><input class="fc" type="number" id="b-brok" value="19.95" oninput="cBuy()"></div>
-                <div class="fg"><label class="fl">Total Cost (auto)</label><input class="fc" id="b-total" readonly></div>
-                <div class="fg"><label class="fl">Notes</label><input class="fc" id="b-notes" placeholder="Optional"></div>
-              </div>
-              <hr>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-green" onclick="sBuy()">✓ Record Purchase</button>
-                <button class="btn btn-outline" onclick="clrBuy()">Clear</button>
-              </div>
-              <div id="b-res" style="margin-top:12px"></div>
-            </div>
-          </div>
-        </div>
-        <div id="tab-sell" style="display:none">
-          <div class="card">
-            <div class="card-header"><span class="card-title">Record Sale</span></div>
-            <div class="card-body">
-              <div class="fgrid fg3">
-                <div class="fg"><label class="fl">Transaction ID</label><input class="fc" id="s-id" placeholder="T008"></div>
-                <div class="fg"><label class="fl">Date</label><input class="fc" type="date" id="s-date"></div>
-                <div class="fg"><label class="fl">Member</label><select class="fc" id="s-mem" onchange="prevFIFO()"><option value="KS">KS — Kailash Sahetya</option><option value="LP">LP — Lata Pahuja</option></select></div>
-                <div class="fg"><label class="fl">ASX Code</label><input class="fc" id="s-asx" placeholder="e.g. RSG" style="text-transform:uppercase" onblur="prevFIFO()"></div>
-                <div class="fg"><label class="fl">Qty to Sell</label><input class="fc" type="number" id="s-qty" placeholder="0" oninput="cSell();prevFIFO()"></div>
-                <div class="fg"><label class="fl">Sale Price ($)</label><input class="fc" type="number" step="0.0001" id="s-price" placeholder="0.0000" oninput="cSell()"></div>
-                <div class="fg"><label class="fl">Brokerage ($)</label><input class="fc" type="number" id="s-brok" value="19.95" oninput="cSell()"></div>
-                <div class="fg"><label class="fl">Net Proceeds (auto)</label><input class="fc" id="s-net" readonly></div>
-                <div class="fg"><label class="fl">Notes</label><input class="fc" id="s-notes" placeholder="Optional"></div>
-              </div>
-              <div id="s-fifo"></div>
-              <hr>
-              <div style="display:flex;gap:8px">
-                <button class="btn btn-red" onclick="sSell()">✓ Record Sale</button>
-                <button class="btn btn-outline" onclick="clrSell()">Clear</button>
-              </div>
-              <div id="s-res" style="margin-top:12px"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- DIVIDENDS -->
-    <div class="page" id="p-dividends">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Record Dividend Receipt</span></div>
-        <div class="card-body">
-          <div class="fgrid fg3">
-            <div class="fg"><label class="fl">Dividend ID</label><input class="fc" id="d-id" placeholder="D001"></div>
-            <div class="fg"><label class="fl">Date</label><input class="fc" type="date" id="d-date"></div>
-            <div class="fg"><label class="fl">ASX Code</label><input class="fc" id="d-asx" placeholder="ANZ" style="text-transform:uppercase"></div>
-            <div class="fg"><label class="fl">Member</label><select class="fc" id="d-mem"><option value="KS">KS</option><option value="LP">LP</option></select></div>
-            <div class="fg"><label class="fl">Shares Held</label><input class="fc" type="number" id="d-sh" placeholder="0" oninput="cDiv()"></div>
-            <div class="fg"><label class="fl">Dividend/Share ($)</label><input class="fc" type="number" step="0.00001" id="d-dps" placeholder="0.00000" oninput="cDiv()"></div>
-            <div class="fg"><label class="fl">Total Dividend (auto)</label><input class="fc" id="d-tot" readonly></div>
-            <div class="fg"><label class="fl">Franking % (0–100)</label><input class="fc" type="number" id="d-fpct" value="100" oninput="cDiv()"></div>
-            <div class="fg"><label class="fl">Franking Credit (auto)</label><input class="fc" id="d-famt" readonly></div>
-            <div class="fg"><label class="fl">Gross Dividend (auto)</label><input class="fc" id="d-gross" readonly></div>
-            <div class="fg"><label class="fl">Payment Method</label><select class="fc" id="d-meth"><option value="Cash">Cash</option><option value="DRP">DRP (Reinvested)</option><option value="Both">Both</option></select></div>
-            <div class="fg"><label class="fl">Notes</label><input class="fc" id="d-notes" placeholder="Optional"></div>
-          </div>
-          <hr>
-          <button class="btn btn-green" onclick="sDiv()">✓ Record Dividend</button>
-          <div id="d-res" style="margin-top:12px"></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><span class="card-title">Dividend History</span></div>
-        <div class="tbl-wrap">
-          <table><thead><tr><th>ID</th><th>Date</th><th>ASX</th><th>Member</th><th class="tr">Total Div</th><th class="tr">Franking</th><th class="tr">Gross</th><th>Method</th></tr></thead>
-          <tbody id="d-hist"><tr><td colspan="8"><div class="empty">No dividends recorded yet</div></td></tr></tbody></table>
-        </div>
-      </div>
-    </div>
-
-    <!-- EXPENSES -->
-    <div class="page" id="p-expenses">
-      <div class="card">
-        <div class="card-header"><span class="card-title">Record Expense / Bank Transaction</span></div>
-        <div class="card-body">
-          <div class="alert alert-info">ℹ Shared expenses default to 70% KS / 30% LP. Adjust the split below before saving.</div>
-          <div class="fgrid fg3">
-            <div class="fg"><label class="fl">Transaction ID</label><input class="fc" id="e-id" placeholder="B001"></div>
-            <div class="fg"><label class="fl">Date</label><input class="fc" type="date" id="e-date"></div>
-            <div class="fg"><label class="fl">Description</label><input class="fc" id="e-desc" placeholder="Annual Audit Fee 2024"></div>
-            <div class="fg"><label class="fl">Account</label>
-              <select class="fc" id="e-acc">
-                <option value="5100|Audit Fees">5100 — Audit Fees</option>
-                <option value="5101|Accounting Fees">5101 — Accounting Fees</option>
-                <option value="5102|ASIC / APRA Fees">5102 — ASIC / APRA Fees</option>
-                <option value="5103|Bank Charges">5103 — Bank Charges</option>
-                <option value="4003|Interest Income">4003 — Interest Income (receipt)</option>
-              </select>
-            </div>
-            <div class="fg"><label class="fl">Total Amount ($)</label><input class="fc" type="number" id="e-tot" placeholder="0.00" oninput="cExp()"></div>
-            <div class="fg"><label class="fl">Dr / Cr</label><select class="fc" id="e-drcr"><option value="Dr">Dr — Expense / Payment</option><option value="Cr">Cr — Income / Receipt</option></select></div>
-          </div>
-          <div style="margin-top:14px">
-            <label class="fl">Member Split</label>
-            <div style="display:flex;gap:10px;margin-top:8px;align-items:center">
-              <div class="fg" style="flex:1"><label class="fl" style="font-size:9px">KS %</label><input class="fc" type="number" id="e-kspct" value="70" oninput="cExp()"></div>
-              <div style="font-size:16px;color:var(--slate-light);margin-top:16px">:</div>
-              <div class="fg" style="flex:1"><label class="fl" style="font-size:9px">LP %</label><input class="fc" type="number" id="e-lppct" value="30" oninput="cExp()"></div>
-            </div>
-            <div class="split-row">
-              <div class="split-box"><small>KS Amount</small><span id="e-ksamt">$0.00</span></div>
-              <div class="split-box"><small>LP Amount</small><span id="e-lpamt">$0.00</span></div>
-            </div>
-          </div>
-          <hr>
-          <button class="btn btn-primary" onclick="sExp()">✓ Record Expense</button>
-          <div id="e-res" style="margin-top:12px"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- JOURNAL -->
-    <div class="page" id="p-journal">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Master Journal — Double Entry Ledger</span>
-          <div style="display:flex;gap:7px">
-            <select class="fc" style="width:140px;padding:5px 9px;font-size:11px" id="jf-mem" onchange="rJournal()">
-              <option value="">All Members</option><option value="KS">KS</option><option value="LP">LP</option>
-            </select>
-            <select class="fc" style="width:140px;padding:5px 9px;font-size:11px" id="jf-type" onchange="rJournal()">
-              <option value="">All Types</option>
-              <option value="OPENING">Opening</option><option value="BUY">Buy</option>
-              <option value="SELL">Sell</option><option value="DIV">Dividend</option><option value="BANK">Bank</option>
-            </select>
-          </div>
-        </div>
-        <div class="tbl-wrap">
-          <table><thead><tr>
-            <th>ID</th><th>Date</th><th>Ref</th><th>Type</th><th>Narration</th>
-            <th>Account</th><th class="tr">Debit</th><th class="tr">Credit</th><th>Member</th><th>ASX</th>
-          </tr></thead>
-          <tbody id="j-tbody"><tr><td colspan="10"><div class="empty">Loading journal...</div></td></tr></tbody></table>
-        </div>
-        <div style="padding:10px 18px;border-top:1px solid var(--border);display:flex;gap:20px;font-size:11px;color:var(--slate)">
-          <span>Entries: <strong id="j-cnt">0</strong></span>
-          <span>Total Debits: <strong id="j-dr">$0.00</strong></span>
-          <span>Total Credits: <strong id="j-cr">$0.00</strong></span>
-        </div>
-      </div>
-    </div>
-
-    <!-- BALANCE SHEET -->
-    <div class="page" id="p-bs">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Statement of Financial Position</span>
-          <button class="btn btn-outline" onclick="window.print()">⊞ Print / PDF</button>
-        </div>
-        <div class="card-body" id="bs-body"><div class="empty">Loading...</div></div>
-      </div>
-    </div>
-
-    <!-- P&L -->
-    <div class="page" id="p-pl">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Profit &amp; Loss Statement</span>
-          <button class="btn btn-outline" onclick="window.print()">⊞ Print / PDF</button>
-        </div>
-        <div class="card-body" id="pl-body"><div class="empty">Loading...</div></div>
-      </div>
-    </div>
-
-    <!-- CGT -->
-    <div class="page" id="p-cgt">
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">Capital Gains Tax Schedule — FY 2023–24</span>
-          <button class="btn btn-outline" onclick="window.print()">⊞ Print / PDF</button>
-        </div>
-        <div class="tbl-wrap" id="cgt-body"><div class="empty">Loading...</div></div>
-      </div>
-    </div>
-
-  </div>
-</div>
-
-<script>
-const API = 'https://script.google.com/macros/s/AKfycbz1e0hAcbqZiupprkTgZu9AE2y-skBj8TfXbKI_d9hhWpJAUjkKkGLaVkluIq6oZyuSqw/exec';
-
-let curMem='ALL', lots=[], journal=[], divs=[], tb={}, prices={};
-
-// ── UTILS ──────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-const fmt = (n,dp=2) => {
-  if(n===null||n===undefined||n===''||isNaN(+n)) return '—';
-  const v=+n, s=Math.abs(v).toLocaleString('en-AU',{minimumFractionDigits:dp,maximumFractionDigits:dp});
-  return (v<0?'−$':'$')+s;
-};
-const fq = n => isNaN(+n)?'—':(+n).toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2});
-const gc = n => +n>=0?'gain':'loss';
-const bdg = (txt,cls) => `<span class="badge ${cls}">${txt}</span>`;
-
-// Clean any date string to dd/mm/yyyy
-const cleanDate = (val) => {
-  if (!val || val === '' || val === 'DATE MISSING') return val || '—';
-  const s = String(val).trim();
-  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)) return s;
-  if (/^\d{5}$/.test(s)) {
-    const d = new Date(Math.round((+s - 25569) * 86400000));
-    if (!isNaN(d.getTime())) return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-  }
-  const d = new Date(s);
-  if (!isNaN(d.getTime())) {
-    return String(d.getDate()).padStart(2,'0')+'/'+String(d.getMonth()+1).padStart(2,'0')+'/'+d.getFullYear();
-  }
-  return s;
-};
-const loading = (msg='Loading...') => { $('ltxt').textContent=msg; $('lov').classList.add('on'); };
-const done = () => $('lov').classList.remove('on');
-const res = (id,ok,msg) => { $(id).innerHTML=`<div class="alert alert-${ok?'success':'error'}">${ok?'✓':'✗'} ${msg}</div>`; setTimeout(()=>$(id).innerHTML='',5000); };
-
-// ── API ────────────────────────────────────────────────────
-async function apig(action,params={}) {
-  const u=new URL(API); u.searchParams.set('action',action);
-  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
-  const r=await fetch(u.toString()); if(!r.ok) throw new Error('HTTP '+r.status);
-  return r.json();
-}
-async function apip(action,data={}) {
-     const r=await fetch(API,{method:'POST',body:JSON.stringify({action,...data})});
-     if(!r.ok) throw new Error('HTTP '+r.status); return r.json();
-   }
-// ── NAV ───────────────────────────────────────────────────
-const titles={dashboard:'Dashboard',holdings:'Investment Holdings',buysell:'Buy / Sell Shares',dividends:'Dividends',expenses:'Expenses & Bank',journal:'Master Journal',bs:'Balance Sheet',pl:'Profit & Loss',cgt:'CGT Schedule'};
-function nav(id) {
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
-  const pg=$('p-'+id); if(pg) pg.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n=>{if((n.getAttribute('onclick')||'').includes("'"+id+"'"))n.classList.add('active');});
-  $('ptitle').textContent=titles[id]||id;
-  if(id==='holdings') rHoldings();
-  if(id==='journal') rJournal();
-  if(id==='bs') rBS();
-  if(id==='pl') rPL();
-  if(id==='cgt') rCGT();
-  if(id==='dividends') rDivHist();
-}
-
-function setMem(m,btn) {
-  curMem=m;
-  document.querySelectorAll('.mem-toggle button').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  rDash(); rHoldings();
-}
-
-function stab(id,cont,el) {
-  const c=$(cont); c.querySelectorAll('[id^="tab-"]').forEach(t=>t.style.display='none');
-  $('tab-'+id).style.display='block';
-  c.closest('.page').querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-  el.classList.add('active');
-}
-
-// ── LOAD ALL DATA ──────────────────────────────────────────
-async function loadAll() {
-  loading('Fetching data from Google Sheets...');
+function doGet(e) {
   try {
-    const r = await apig('getAllData');
-    if (r.error) throw new Error(r.error);
-    lots    = r.holdings    || [];
-    journal = r.journal     || [];
-    tb      = r.tb          || {};
-    prices  = r.smPrices    || {};
-    divs    = r.dividends   || [];
-    done(); rDash();
-  } catch(e) {
-    done(); alert('API Error: ' + e.message);
+    const action = e.parameter.action;
+    if (action === 'getAllData') return respond(fetchAllData());
+    if (action === 'getCGT') return respond(fetchCGT());
+    return respond({ error: "Unknown GET action" });
+  } catch (err) {
+    return respond({ error: err.message });
   }
 }
 
-// ── DASHBOARD ──────────────────────────────────────────────
-function rDash() {
-  const fl = curMem==='ALL' ? lots : lots.filter(l=>l.member===curMem);
-  const cost=fl.reduce((a,l)=>a+Number(l.remCost||0),0);
-  const mv=fl.reduce((a,l)=>a+Number(l.remQty||0)*(prices[l.asx]||0),0);
-  const ur=mv-cost;
-  const ksCost=lots.filter(l=>l.member==='KS').reduce((a,l)=>a+Number(l.remCost||0),0);
-  const lpCost=lots.filter(l=>l.member==='LP').reduce((a,l)=>a+Number(l.remCost||0),0);
-  const ksMV=lots.filter(l=>l.member==='KS').reduce((a,l)=>a+Number(l.remQty||0)*(prices[l.asx]||0),0);
-  const lpMV=lots.filter(l=>l.member==='LP').reduce((a,l)=>a+Number(l.remQty||0)*(prices[l.asx]||0),0);
-  const gKS=tb['KS:4100']?-tb['KS:4100'].net:0, gLP=tb['LP:4100']?-tb['LP:4100'].net:0;
-  $('kn').textContent=fmt(cost); $('kn-ks').textContent=fmt(ksCost); $('kn-lp').textContent=fmt(lpCost);
-  $('kmv').textContent=fmt(mv); $('kmv-ks').textContent=fmt(ksMV); $('kmv-lp').textContent=fmt(lpMV);
-  $('kur').textContent=fmt(ur); $('kur-ks').textContent=fmt(ksMV-ksCost); $('kur-lp').textContent=fmt(lpMV-lpCost);
-  $('krg').textContent=gKS+gLP>0?fmt(gKS+gLP):'—'; $('krg-ks').textContent=gKS>0?fmt(gKS):'—'; $('krg-lp').textContent=gLP>0?fmt(gLP):'—';
+function doPost(e) {
+  try {
+    // Bypassing CORS Preflight by parsing the raw string payload
+    const data = JSON.parse(e.postData.contents);
+    const action = data.action;
 
-  const byA={};
-  lots.forEach(l=>{
-    if(!byA[l.asx]) byA[l.asx]={ksQ:0,lpQ:0,cost:0,mv:0,cgt:false,st:l.status};
-    if(l.member==='KS') byA[l.asx].ksQ+=+l.remQty||0;
-    if(l.member==='LP') byA[l.asx].lpQ+=+l.remQty||0;
-    byA[l.asx].cost+=+l.remCost||0;
-    byA[l.asx].mv+=(+l.remQty||0)*(prices[l.asx]||0);
-    if(l.cgtEl==='Yes') byA[l.asx].cgt=true;
+    if (action === 'addBuy') return respond(appendStock(data, 'Buy'));
+    if (action === 'addSell') return respond(appendStock(data, 'Sell'));
+    if (action === 'addExpense') return respond(appendBank(data));
+    if (action === 'addDividend') return respond(appendDividend(data));
+
+    return respond({ error: "Unknown POST action: " + action });
+  } catch (err) {
+    return respond({ error: err.message });
+  }
+}
+
+function respond(data) {
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+
+// ============================================================
+// 1. DATA ENTRY & SYNC (Web App -> Google Sheets)
+// ============================================================
+
+function appendBank(d) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sheet = ss.getSheetByName('BankTransactions');
+  let rowsAdded = 0;
+
+  // Split transaction to KS and LP
+  if (d.ksAmt !== 0) {
+    sheet.appendRow([d.id + '-KS', d.date, 'KS', d.desc, d.acCode, d.acName, Math.abs(d.ksAmt), d.drcr, '', '', 'Auto-split via App']);
+    rowsAdded++;
+  }
+  if (d.lpAmt !== 0) {
+    sheet.appendRow([d.id + '-LP', d.date, 'LP', d.desc, d.acCode, d.acName, Math.abs(d.lpAmt), d.drcr, '', '', 'Auto-split via App']);
+    rowsAdded++;
+  }
+
+  triggerJournalEngine(); // Run any journal generation if it exists
+  return { ok: true, message: `Synced ${rowsAdded} bank rows.` };
+}
+
+function appendStock(d, type) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sheet = ss.getSheetByName('StockTransactions');
+  
+  // Gross and Net calculation
+  const gross = Number(d.qty) * Number(d.price);
+  const net = type === 'Buy' ? gross + Number(d.brok) : gross - Number(d.brok);
+
+  sheet.appendRow([d.txnID, d.date, d.member, d.asx.toUpperCase(), type.toUpperCase(), d.qty, d.price, d.brok, net, d.notes]);
+
+  // Recalculate CGT and Lots immediately upon a trade
+  runFIFOEngine();
+  triggerJournalEngine();
+  
+  return { ok: true, message: `Recorded ${type} for ${d.asx}` };
+}
+
+function appendDividend(d) {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const sheet = ss.getSheetByName('Dividends');
+  
+  sheet.appendRow([d.divID, d.date, d.asx.toUpperCase(), d.member, d.shares, d.dps, d.total, d.frankPct, d.frankAmt, d.gross, d.method, d.notes]);
+  
+  triggerJournalEngine();
+  return { ok: true, message: `Recorded Dividend for ${d.asx}` };
+}
+
+
+// ============================================================
+// 2. THE FIFO ACCOUNTING ENGINE (Calculates Capital Gains)
+// ============================================================
+
+function runFIFOEngine() {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  
+  const opSheet = ss.getSheetByName('OpeningLots');
+  const txSheet = ss.getSheetByName('StockTransactions');
+  if (!opSheet || !txSheet) return; // Prevent crashing if sheets missing
+  
+  const opData = opSheet.getDataRange().getValues().slice(1);
+  const txData = txSheet.getDataRange().getValues().slice(1);
+  
+  let virtualQueue = []; 
+  let cgtEvents = [];    
+  
+  // A. Load Opening Lots 
+  // Assuming Columns: [LotID, ASX, Member, Date, OrigQty, RemQty, CostPerShare, TotalCost]
+  opData.forEach(row => {
+    if (!row[0]) return;
+    virtualQueue.push({
+      lotId: String(row[0]), asx: String(row[1]).toUpperCase(), member: String(row[2]), 
+      date: new Date(row[3]), origQty: Number(row[4]), remQty: Number(row[5] !== '' ? row[5] : row[4]), 
+      costPerShare: Number(row[6]), totalCost: Number(row[7])
+    });
   });
-  const sc={Active:'bg',Suspended:'bo',Bankrupt:'br',Sold:'bgy'};
-  $('dash-tbody').innerHTML=Object.entries(byA).sort((a,b)=>a[0]<b[0]?-1:1).map(([asx,d])=>{
-    const gl=d.mv-d.cost;
-    return `<tr><td><strong>${asx}</strong></td><td>${bdg(d.st,sc[d.st]||'bgy')}</td>
-      <td class="tr mono">${d.ksQ>0?fq(d.ksQ):'—'}</td><td class="tr mono">${d.lpQ>0?fq(d.lpQ):'—'}</td>
-      <td class="tr mono">${fmt(d.cost)}</td><td class="tr mono">${d.mv>0?fmt(d.mv):'—'}</td>
-      <td class="tr mono ${gc(gl)}">${fmt(gl)}</td>
-      <td class="tc">${bdg(d.cgt?'Yes':'No',d.cgt?'bg':'bgy')}</td></tr>`;
-  }).join('');
-}
 
-// ── HOLDINGS ──────────────────────────────────────────────
-function rHoldings() {
-  const fl=curMem==='ALL'?lots:lots.filter(l=>l.member===curMem);
-  const sc={Open:'bg',Partial:'bgold',Closed:'bgy',Bankrupt:'br',Suspended:'bo'};
-  $('h-tbody').innerHTML=[...fl].sort((a,b)=>a.asx<b.asx?-1:a.asx>b.asx?1:a.member<b.member?-1:1).map(l=>{
-    const mv=(+l.remQty||0)*(prices[l.asx]||0), ur=mv-(+l.remCost||0);
-    return `<tr>
-      <td><strong>${l.asx}</strong></td><td>${bdg(l.member,'bgy')}</td>
-      <td class="mono">${l.purDate?cleanDate(l.purDate):bdg('⚠ Missing','br')}</td>
-      <td class="tr mono">${fq(l.origQty)}</td><td class="tr mono">${fq(l.remQty)}</td>
-      <td class="tr mono">${fmt(l.costPS,5)}</td><td class="tr mono">${fmt(l.remCost)}</td>
-      <td class="tr mono">${mv>0?fmt(mv):'—'}</td>
-      <td class="tr mono ${gc(ur)}">${mv>0?fmt(ur):'—'}</td>
-      <td class="tc mono">${l.days||'?'}</td>
-      <td class="tc">${bdg(l.cgtEl||'?',l.cgtEl==='Yes'?'bg':'bgy')}</td>
-      <td>${bdg(l.status,sc[l.status]||'bgy')}</td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="12"><div class="empty">No holdings found</div></td></tr>';
-}
+  // B. Load Stock Transactions
+  // Assuming Columns: [TxnID, Date, Member, ASX, Type, Qty, Price, Brokerage, Net]
+  let transactions = [];
+  txData.forEach(r => {
+     if (!r[0]) return;
+     transactions.push({
+       id: String(r[0]), date: new Date(r[1]), member: String(r[2]), asx: String(r[3]).toUpperCase(), 
+       type: String(r[4]).toUpperCase(), qty: Number(r[5]), net: Number(r[8])
+     });
+  });
+  
+  // Sort strictly chronological
+  transactions.sort((a, b) => a.date - b.date); 
 
-// ── JOURNAL ───────────────────────────────────────────────
-function rJournal() {
-  const mf=$('jf-mem').value, tf=$('jf-type').value;
-  const fl=journal.filter(r=>(!mf||r.member===mf)&&(!tf||r.txnType===tf));
-  let tDr=0,tCr=0;
-  const tc={OPENING:'bgold',BUY:'bg',SELL:'br',DIV:'bgold',BANK:'bgy'};
-  $('j-tbody').innerHTML=fl.map(r=>{
-    tDr+=+r.debit||0; tCr+=+r.credit||0;
-    return `<tr>
-      <td class="mono" style="font-size:10px">${r.jid||''}</td>
-      <td class="mono" style="white-space:nowrap;font-size:11px">${cleanDate(r.date)||''}</td>
-      <td class="mono" style="font-size:10px">${r.ref||''}</td>
-      <td>${bdg(r.txnType||'',tc[r.txnType]||'bgy')}</td>
-      <td style="max-width:260px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px">${r.narration||''}</td>
-      <td style="font-size:11px;color:var(--slate)">${r.acCode||''} ${r.acName||''}</td>
-      <td class="tr mono gain">${r.debit?fmt(r.debit):''}</td>
-      <td class="tr mono loss">${r.credit?fmt(r.credit):''}</td>
-      <td>${bdg(r.member||'','bgy')}</td>
-      <td class="mono" style="font-size:10px">${r.asx||''}</td>
-    </tr>`;
-  }).join('')||'<tr><td colspan="10"><div class="empty">No journal entries. Run the engine first.</div></td></tr>';
-  $('j-cnt').textContent=fl.length;
-  $('j-dr').textContent=fmt(tDr); $('j-cr').textContent=fmt(tCr);
-}
+  // C. Execute FIFO Logic
+  transactions.forEach(tx => {
+    if (tx.type === 'BUY') {
+      virtualQueue.push({
+        lotId: tx.id, asx: tx.asx, member: tx.member, date: tx.date,
+        origQty: tx.qty, remQty: tx.qty, 
+        costPerShare: tx.net / tx.qty, totalCost: tx.net
+      });
+    } 
+    else if (tx.type === 'SELL') {
+      let qtyToSell = tx.qty;
+      let totalCostBaseExtracted = 0;
+      let consumedLots = [];
+      
+      let availableLots = virtualQueue.filter(l => l.asx === tx.asx && l.member === tx.member && l.remQty > 0)
+                                      .sort((a, b) => a.date - b.date);
 
-// ── BALANCE SHEET ─────────────────────────────────────────
-function rBS() {
-  const g=(c,flip)=>{
-    const ks=tb['KS:'+c]?tb['KS:'+c].net:0, lp=tb['LP:'+c]?tb['LP:'+c].net:0;
-    return flip?{ks:-ks,lp:-lp,fund:-(ks+lp)}:{ks,lp,fund:ks+lp};
-  };
-  const inv=g('1100',false),cash=g('1001',false),div=g('1200',false),frk=g('1300',false),oth=g('1400',false);
-  const crd=g('2001',true),tax=g('2100',true),om=g('3001',true),re=g('3002',true);
-  const tca={ks:cash.ks+div.ks+frk.ks+oth.ks,lp:cash.lp+div.lp+frk.lp+oth.lp};tca.fund=tca.ks+tca.lp;
-  const ta={ks:inv.ks+tca.ks,lp:inv.lp+tca.lp,fund:inv.fund+tca.fund};
-  const tl={ks:crd.ks+tax.ks,lp:crd.lp+tax.lp,fund:crd.fund+tax.fund};
-  const na={ks:ta.ks-tl.ks,lp:ta.lp-tl.lp,fund:ta.fund-tl.fund};
-  const te={ks:om.ks+re.ks,lp:om.lp+re.lp,fund:om.fund+re.fund};
+      for (let i = 0; i < availableLots.length; i++) {
+        if (qtyToSell <= 0) break;
+        
+        let lot = availableLots[i];
+        let qtyTaken = Math.min(lot.remQty, qtyToSell);
+        
+        lot.remQty -= qtyTaken;
+        qtyToSell -= qtyTaken;
+        
+        let costOfTaken = qtyTaken * lot.costPerShare;
+        totalCostBaseExtracted += costOfTaken;
+        consumedLots.push(lot.lotId);
+      }
+      
+      let realizedGain = tx.net - totalCostBaseExtracted;
+      
+      // Calculate SMSF CGT Discount (1/3rd discount if held > 365 days)
+      let daysHeld = availableLots.length > 0 ? Math.floor((tx.date - availableLots[0].date) / (1000 * 60 * 60 * 24)) : 0;
+      let cgtEl = daysHeld >= 365 ? 'Yes' : 'No';
+      let discount = (cgtEl === 'Yes' && realizedGain > 0) ? realizedGain * 0.33333 : 0; 
+      let netGain = realizedGain - discount;
 
-  const row=(lbl,d,cls='')=>`<tr${cls?` class="${cls}"`:''}><td>${lbl}</td><td class="tr mono">${fmt(d.ks)}</td><td class="tr mono">${fmt(d.lp)}</td><td class="tr mono">${fmt(d.fund)}</td></tr>`;
-  const sect=lbl=>`<tr class="rsect"><td colspan="4">${lbl}</td></tr>`;
-  const sp=`<tr><td colspan="4" style="height:6px"></td></tr>`;
+      cgtEvents.push([
+        tx.asx, tx.member, daysHeld, tx.date, totalCostBaseExtracted, realizedGain, cgtEl, discount, netGain, consumedLots.join(', ')
+      ]);
+    }
+  });
 
-  $('bs-body').innerHTML=`
-    <h2 style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:4px">KS &amp; LP Superannuation Fund</h2>
-    <p style="color:var(--slate-light);font-size:12px;margin-bottom:18px">Statement of Financial Position — As at 30 June 2024</p>
-    <table class="rpt" style="width:100%">
-      <thead><tr><th style="width:60%"></th><th style="width:13%;text-align:right">KS ($)</th><th style="width:13%;text-align:right">LP ($)</th><th style="width:14%;text-align:right">Fund Total ($)</th></tr></thead>
-      <tbody>
-        ${sect('ASSETS')}
-        ${row('Investments — Shares (at cost)',inv)}${sp}
-        ${row('Cash at Bank',cash)}${row('Dividends Receivable',div)}
-        ${row('Tax Offset Receivable (Franking)',frk)}${row('Other Receivables',oth)}
-        ${row('Total Current Assets',tca,'rsub')}${sp}
-        ${row('TOTAL ASSETS',ta,'rtotal')}${sp}
-        ${sect('LIABILITIES')}
-        ${row('Sundry Creditors',crd)}${row('Income Tax Payable',tax)}
-        ${row('TOTAL LIABILITIES',tl,'rtotal')}${sp}
-        ${row('NET ASSETS',na,'rtotal')}${sp}
-        ${sect('MEMBER EQUITY')}
-        ${row('Opening Member Account',om)}${row('Add: Net Profit After Tax',re)}
-        ${row('TOTAL MEMBER EQUITY',te,'rtotal')}
-      </tbody>
-    </table>`;
-}
-
-// ── P&L ───────────────────────────────────────────────────
-function rPL() {
-  const inc=c=>{const ks=tb['KS:'+c]?tb['KS:'+c].net:0,lp=tb['LP:'+c]?tb['LP:'+c].net:0;return{ks:-ks,lp:-lp,fund:-(ks+lp)};};
-  const exp=c=>{const ks=tb['KS:'+c]?tb['KS:'+c].net:0,lp=tb['LP:'+c]?tb['LP:'+c].net:0;return{ks,lp,fund:ks+lp};};
-  const div=inc('4001'),frk=inc('4002'),int_=inc('4003'),gain=inc('4100');
-  const brk=exp('5001'),aud=exp('5100'),acc=exp('5101'),asic=exp('5102'),bnk=exp('5103'),loss=exp('5200'),wo=exp('5300');
-  const ti={ks:div.ks+frk.ks+int_.ks+gain.ks,lp:div.lp+frk.lp+int_.lp+gain.lp};ti.fund=ti.ks+ti.lp;
-  const te={ks:brk.ks+aud.ks+acc.ks+asic.ks+bnk.ks+loss.ks+wo.ks,lp:brk.lp+aud.lp+acc.lp+asic.lp+bnk.lp+loss.lp+wo.lp};te.fund=te.ks+te.lp;
-  const npbt={ks:ti.ks-te.ks,lp:ti.lp-te.lp,fund:ti.fund-te.fund};
-  const tax={ks:Math.max(0,npbt.ks*.15),lp:Math.max(0,npbt.lp*.15),fund:Math.max(0,npbt.fund*.15)};
-  const npat={ks:npbt.ks-tax.ks,lp:npbt.lp-tax.lp,fund:npbt.fund-tax.fund};
-
-  const row=(lbl,d,cls='')=>`<tr${cls?` class="${cls}"`:''}><td>${lbl}</td><td class="tr mono">${fmt(d.ks)}</td><td class="tr mono">${fmt(d.lp)}</td><td class="tr mono">${fmt(d.fund)}</td></tr>`;
-  const sect=lbl=>`<tr class="rsect"><td colspan="4">${lbl}</td></tr>`;
-  const sp=`<tr><td colspan="4" style="height:6px"></td></tr>`;
-
-  $('pl-body').innerHTML=`
-    <h2 style="font-family:'DM Serif Display',serif;font-size:18px;margin-bottom:4px">KS &amp; LP Superannuation Fund</h2>
-    <p style="color:var(--slate-light);font-size:12px;margin-bottom:18px">Profit &amp; Loss Statement — For the year ended 30 June 2024</p>
-    <table class="rpt" style="width:100%">
-      <thead><tr><th style="width:60%"></th><th style="width:13%;text-align:right">KS ($)</th><th style="width:13%;text-align:right">LP ($)</th><th style="width:14%;text-align:right">Fund Total ($)</th></tr></thead>
-      <tbody>
-        ${sect('INCOME')}
-        ${row('Dividend Income',div)}${row('Franking Credits',frk)}
-        ${row('Interest Income',int_)}${row('Realized Gain on Sale',gain)}
-        ${row('TOTAL INCOME',ti,'rtotal')}${sp}
-        ${sect('EXPENSES')}
-        ${row('Brokerage',brk)}${row('Audit Fees',aud)}${row('Accounting Fees',acc)}
-        ${row('ASIC / APRA Fees',asic)}${row('Bank Charges',bnk)}
-        ${row('Realized Loss on Sale',loss)}${row('Investment Write-Off',wo)}
-        ${row('TOTAL EXPENSES',te,'rtotal')}${sp}
-        ${row('NET PROFIT/(LOSS) BEFORE TAX',npbt,'rsub')}
-        ${row('Less: Income Tax @ 15%',tax)}
-        ${row('NET PROFIT/(LOSS) AFTER TAX',npat,'rtotal')}
-      </tbody>
-    </table>`;
-}
-
-// ── CGT ───────────────────────────────────────────────────
-async function rCGT() {
-  loading('Loading CGT Schedule...');
-  try {
-    const r=await apig('getCGT'); done();
-    const rows=r.cgt||[];
-    if(!rows.length){$('cgt-body').innerHTML='<div class="empty">No disposals for FY 2023–24</div>';return;}
-    let ksN=0,lpN=0;
-    $('cgt-body').innerHTML=`<table style="width:100%">
-      <thead><tr><th>ASX</th><th>Member</th><th class="tc">Days</th><th>Sale Date</th><th class="tr">Cost Base</th><th class="tr">Raw Gain/Loss</th><th class="tc">CGT Elig.</th><th class="tr">Discount</th><th class="tr">Net Taxable</th><th>Lot</th></tr></thead>
-      <tbody>
-        ${rows.map(r=>{
-          if(r.member==='KS')ksN+=+r.netGain||0;if(r.member==='LP')lpN+=+r.netGain||0;
-          return `<tr style="background:${r.cgtEl==='Yes'?'#f0fff4':r.cgtEl==='?'?'#fffbeb':'white'}">
-            <td><strong>${r.asx}</strong></td><td>${bdg(r.member,'bgy')}</td>
-            <td class="tc mono">${r.days||'?'}</td><td class="mono">${cleanDate(r.saleDate)||''}</td>
-            <td class="tr mono">${fmt(r.costBase)}</td>
-            <td class="tr mono ${gc(r.gainLoss)}">${fmt(r.gainLoss)}</td>
-            <td class="tc">${bdg(r.cgtEl||'?',r.cgtEl==='Yes'?'bg':r.cgtEl==='?'?'bgold':'bgy')}</td>
-            <td class="tr mono">${fmt(r.discount)}</td>
-            <td class="tr mono ${gc(r.netGain)}">${fmt(r.netGain)}</td>
-            <td class="mono" style="font-size:10px;color:var(--slate-light)">${r.lot||''}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-      <tfoot>
-        <tr style="background:#f0f4f8;font-weight:700"><td colspan="8" style="padding:10px 12px">KS Net Taxable</td><td class="tr mono ${gc(ksN)}" style="padding:10px 12px">${fmt(ksN)}</td><td></td></tr>
-        <tr style="background:#f0f4f8;font-weight:700"><td colspan="8" style="padding:10px 12px">LP Net Taxable</td><td class="tr mono ${gc(lpN)}" style="padding:10px 12px">${fmt(lpN)}</td><td></td></tr>
-        <tr style="background:var(--navy);color:white;font-weight:700"><td colspan="8" style="padding:10px 12px">Fund Total Net Taxable</td><td class="tr mono" style="padding:10px 12px">${fmt(ksN+lpN)}</td><td></td></tr>
-      </tfoot>
-    </table>`;
-  } catch(e) { done(); $('cgt-body').innerHTML='<div class="alert alert-warn" style="margin:16px">CGT data not available. Run engine first.</div>'; }
-}
-
-// ── DIVIDENDS ─────────────────────────────────────────────
-function rDivHist() {
-  $('d-hist').innerHTML=divs.length?divs.map(d=>`<tr>
-    <td class="mono">${d.id}</td><td class="mono">${cleanDate(d.date)}</td><td><strong>${d.asx}</strong></td>
-    <td>${bdg(d.member,'bgy')}</td><td class="tr mono">${fmt(d.total)}</td>
-    <td class="tr mono">${fmt(d.frank)}</td><td class="tr mono">${fmt(d.gross)}</td><td>${d.method}</td>
-  </tr>`).join(''):'<tr><td colspan="8"><div class="empty">No dividends recorded yet</div></td></tr>';
-}
-
-// ── FORM CALCS ────────────────────────────────────────────
-function cBuy(){const q=+$('b-qty').value||0,p=+$('b-price').value||0,br=+$('b-brok').value||0;$('b-total').value='$'+(q*p+br).toFixed(2);}
-function cSell(){const q=+$('s-qty').value||0,p=+$('s-price').value||0,br=+$('s-brok').value||0;$('s-net').value='$'+(q*p-br).toFixed(2);}
-function cDiv(){
-  const sh=+$('d-sh').value||0,dps=+$('d-dps').value||0,fp=+$('d-fpct').value||0;
-  const tot=sh*dps,frank=tot*(fp/100)*(30/70);
-  $('d-tot').value='$'+tot.toFixed(2);$('d-famt').value='$'+frank.toFixed(2);$('d-gross').value='$'+(tot+frank).toFixed(2);
-}
-function cExp(){
-  const tot=+$('e-tot').value||0,kp=+$('e-kspct').value||70,lp=+$('e-lppct').value||30;
-  $('e-ksamt').textContent='$'+(tot*kp/100).toFixed(2);$('e-lpamt').textContent='$'+(tot*lp/100).toFixed(2);
-}
-function prevFIFO(){
-  const asx=($('s-asx').value||'').toUpperCase(),mem=$('s-mem').value,qty=+$('s-qty').value||0;
-  if(!asx||!qty){$('s-fifo').innerHTML='';return;}
-  const fl=lots.filter(l=>l.asx===asx&&l.member===mem&&+l.remQty>0).sort((a,b)=>new Date(a.purDate)-new Date(b.purDate));
-  let rem=qty,html='';
-  for(const l of fl){
-    if(rem<=0)break;
-    const c=Math.min(+l.remQty,rem);
-    html+=`<div class="fifo-row"><span class="fl2">Lot ${l.clID} — ${cleanDate(l.purDate)} ${l.cgtEl==='Yes'?'✓ CGT':'✗ No CGT'}</span><span class="fv">${fq(c)} shares @ ${fmt(l.costPS,5)} = ${fmt(c*l.costPS)}</span></div>`;
-    rem-=c;
+  // D. Write to 'ComputedLots'
+  const compSheet = ss.getSheetByName('ComputedLots');
+  if (compSheet) {
+    compSheet.clearContents();
+    let computedOutput = [['Lot ID', 'ASX', 'Member', 'Purchase Date', 'Original Qty', 'Remaining Qty', 'Cost Base Per Share', 'Total Remaining Cost', 'Days Held', 'CGT Eligible', 'Status']];
+    
+    let today = new Date();
+    virtualQueue.forEach(lot => {
+      if (lot.remQty > 0.01) {
+         let days = Math.floor((today - lot.date) / (1000 * 60 * 60 * 24));
+         let cgtEl = days >= 365 ? 'Yes' : 'No';
+         computedOutput.push([
+           lot.lotId, lot.asx, lot.member, lot.date, lot.origQty, lot.remQty, 
+           lot.costPerShare, (lot.remQty * lot.costPerShare), days, cgtEl, 'Open'
+         ]);
+      }
+    });
+    
+    if (computedOutput.length > 1) {
+      compSheet.getRange(1, 1, computedOutput.length, computedOutput[0].length).setValues(computedOutput);
+    } else {
+      compSheet.getRange(1, 1, 1, computedOutput[0].length).setValues([computedOutput[0]]);
+    }
   }
-  if(rem>0.01) html+=`<div class="alert alert-error" style="margin-top:8px">⚠ Short by ${fq(rem)} shares</div>`;
-  $('s-fifo').innerHTML=html?`<div class="fifo-prev"><h4>FIFO Preview</h4>${html}</div>`:'';
+
+  // E. Write to 'CGT_Schedule'
+  let cgtSheet = ss.getSheetByName('CGT_Schedule');
+  if (!cgtSheet) cgtSheet = ss.insertSheet('CGT_Schedule');
+  
+  cgtSheet.clearContents();
+  let cgtOutput = [['ASX', 'Member', 'Days Held', 'Sale Date', 'Cost Base', 'Raw Gain/Loss', 'CGT Elig.', 'Discount', 'Net Taxable', 'Lots Consumed']];
+  if (cgtEvents.length > 0) cgtOutput = cgtOutput.concat(cgtEvents);
+  cgtSheet.getRange(1, 1, cgtOutput.length, cgtOutput[0].length).setValues(cgtOutput);
 }
 
-// ── SUBMISSIONS ───────────────────────────────────────────
-async function sBuy(){
-  const d={txnID:$('b-id').value,date:$('b-date').value,asx:$('b-asx').value.toUpperCase(),member:$('b-mem').value,qty:$('b-qty').value,price:$('b-price').value,brok:$('b-brok').value,notes:$('b-notes').value};
-  if(!d.txnID||!d.date||!d.asx||!d.qty||!d.price){res('b-res',false,'Fill in all required fields.');return;}
-  loading('Recording purchase...');
-  try{const r=await apip('addBuy',d);done();res('b-res',r.ok||false,r.ok?'Purchase recorded. Run engine to process.':'Error: '+(r.message||''));if(r.ok)clrBuy();}catch(e){done();res('b-res',false,'API error: '+e.message);}
-}
-async function sSell(){
-  const d={txnID:$('s-id').value,date:$('s-date').value,asx:$('s-asx').value.toUpperCase(),member:$('s-mem').value,qty:$('s-qty').value,price:$('s-price').value,brok:$('s-brok').value,notes:$('s-notes').value};
-  if(!d.txnID||!d.date||!d.asx||!d.qty||!d.price){res('s-res',false,'Fill in all required fields.');return;}
-  loading('Recording sale...');
-  try{const r=await apip('addSell',d);done();res('s-res',r.ok||false,r.ok?'Sale recorded. Run engine to process.':'Error: '+(r.message||''));if(r.ok)clrSell();}catch(e){done();res('s-res',false,'API error: '+e.message);}
-}
-async function sDiv(){
-  const d={divID:$('d-id').value,date:$('d-date').value,asx:$('d-asx').value.toUpperCase(),member:$('d-mem').value,shares:$('d-sh').value,dps:$('d-dps').value,total:($('d-tot').value||'').replace('$',''),frankPct:$('d-fpct').value,frankAmt:($('d-famt').value||'').replace('$',''),gross:($('d-gross').value||'').replace('$',''),method:$('d-meth').value,notes:$('d-notes').value};
-  if(!d.divID||!d.date||!d.asx){res('d-res',false,'Fill in required fields.');return;}
-  loading('Recording dividend...');
-  try{const r=await apip('addDividend',d);done();res('d-res',r.ok||false,r.ok?'Dividend recorded.':'Error: '+(r.message||''));}catch(e){done();res('d-res',false,'API error: '+e.message);}
-}
-async function sExp(){
-  const av=($('e-acc').value||'').split('|'),tot=+$('e-tot').value||0,kp=+$('e-kspct').value||70,lp=+$('e-lppct').value||30;
-  const d={id:$('e-id').value,date:$('e-date').value,desc:$('e-desc').value,acCode:av[0],acName:av[1],drcr:$('e-drcr').value,total:tot,ksPct:kp,lpPct:lp,ksAmt:tot*kp/100,lpAmt:tot*lp/100};
-  if(!d.id||!d.date||!d.desc||!tot){res('e-res',false,'Fill in all fields.');return;}
-  loading('Recording expense...');
-  try{const r=await apip('addExpense',d);done();res('e-res',r.ok||false,r.ok?`Recorded: KS $${d.ksAmt.toFixed(2)} + LP $${d.lpAmt.toFixed(2)}`:'Error: '+(r.message||''));}catch(e){done();res('e-res',false,'API error: '+e.message);}
+
+// ============================================================
+// 3. DATA FETCHING (Google Sheets -> Web App)
+// ============================================================
+
+function fetchAllData() {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  
+  // Fetch ComputedLots
+  const lotsSheet = ss.getSheetByName('ComputedLots');
+  const lotsData = lotsSheet ? lotsSheet.getDataRange().getValues().slice(1) : [];
+  const holdings = lotsData.map(r => ({
+    clID: r[0], asx: r[1], member: r[2], purDate: r[3], 
+    origQty: r[4], remQty: r[5], costPS: r[6], remCost: r[7], 
+    days: r[8], cgtEl: r[9], status: r[10]
+  })).filter(h => h.remQty > 0);
+
+  // Fetch Journal
+  const journalSheet = ss.getSheetByName('Journal');
+  const journalData = journalSheet ? journalSheet.getDataRange().getValues().slice(1) : [];
+  const journal = [];
+  const tb = {}; 
+
+  journalData.forEach(r => {
+    if (!r[0]) return; 
+    const dr = Number(r[7]) || 0;
+    const cr = Number(r[8]) || 0;
+    const memCode = `${r[9]}:${r[5]}`; 
+    
+    journal.push({
+      jid: r[0], date: r[1], ref: r[2], txnType: r[3], narration: r[4],
+      acCode: r[5], acName: r[6], debit: dr, credit: cr, member: r[9], asx: r[10]
+    });
+
+    if (!tb[memCode]) tb[memCode] = { net: 0 };
+    tb[memCode].net += (dr - cr); 
+  });
+
+  // Fetch Dividends
+  const divSheet = ss.getSheetByName('Dividends');
+  const divData = divSheet ? divSheet.getDataRange().getValues().slice(1) : [];
+  const dividends = divData.map(r => ({
+    id: r[0], date: r[1], asx: r[2], member: r[3],
+    total: r[6], frank: r[8], gross: r[9], method: r[10]
+  }));
+
+  return { holdings, journal, tb, dividends, smPrices: {} };
 }
 
-function clrBuy(){['b-id','b-asx','b-qty','b-price','b-total','b-notes'].forEach(id=>$(id).value='');$('b-brok').value='19.95';}
-function clrSell(){['s-id','s-asx','s-qty','s-price','s-net','s-notes'].forEach(id=>$(id).value='');$('s-brok').value='19.95';$('s-fifo').innerHTML='';}
+function fetchCGT() {
+  const ss = SpreadsheetApp.openById(SS_ID);
+  const cgtSheet = ss.getSheetByName('CGT_Schedule');
+  if (!cgtSheet) return { cgt: [] };
+  
+  const cgtData = cgtSheet.getDataRange().getValues().slice(1);
+  const cgt = cgtData.map(r => ({
+    asx: r[0], member: r[1], days: r[2], saleDate: r[3],
+    costBase: r[4], gainLoss: r[5], cgtEl: r[6], discount: r[7], netGain: r[8], lot: r[9]
+  }));
+  return { cgt };
+}
 
-// ── INIT ──────────────────────────────────────────────────
-window.addEventListener('DOMContentLoaded',()=>{
-  const today=new Date().toISOString().split('T')[0];
-  ['b-date','s-date','d-date','e-date'].forEach(id=>{const el=$(id);if(el)el.value=today;});
-  loadAll();
-});
-</script>
-</body>
-</html>
+function triggerJournalEngine() {
+  try { if (typeof runFromEditor === "function") runFromEditor(); } catch(e) {}
+}
